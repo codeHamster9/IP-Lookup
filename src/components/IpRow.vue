@@ -131,7 +131,7 @@ function countryCodeToFlagUrl(code: string): string {
 }
 
 input {
-  flex: 1;
+  flex: 0 1 290px; 
   padding: 8px 12px;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-input);
