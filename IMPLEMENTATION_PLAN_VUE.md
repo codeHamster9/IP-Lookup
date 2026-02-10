@@ -25,6 +25,7 @@ Build a web application that **translates IP addresses into countries**. Users c
 | Framework | **Vue 3** (Composition API + `<script setup>`) | Explicitly preferred by Torq |
 | Language | **TypeScript** | Explicitly preferred by Torq |
 | Build tool | **Vite** | Official Vue recommendation, fastest DX |
+| Data fetching | **@tanstack/vue-query** | Production-grade: caching, retries, devtools, reactive loading/error states |
 | State | **Reactive refs** (local component state) | App is small; no need for Pinia |
 | Styling | **Vanilla CSS** (scoped `<style>`) | Clean, no extra deps, matches mock simplicity |
 | API | **ip-api.com** (`http://ip-api.com/json/{ip}`) | Free, no API key, returns `country`, `countryCode`, `timezone` |
@@ -39,7 +40,7 @@ Build a web application that **translates IP addresses into countries**. Users c
 > **Vue 3 vs React**: The assignment says *"you are free to use whatever you like"* but explicitly states *"TypeScript and Vue.js 3 will be an advantage."* This plan uses **Vue 3 + TypeScript**. Let me know if you'd prefer React instead.
 
 > [!WARNING]
-> **ip-api.com uses HTTP only** (no HTTPS on the free tier). This is fine for a home assignment but would not be acceptable in production. The app will need to be served over HTTP during dev, or we can use a CORS proxy / the batch endpoint. We'll handle this with a simple composable that wraps `fetch`.
+> **ip-api.com uses HTTP only** (no HTTPS on the free tier). This is fine for a home assignment but would not be acceptable in production. The app will need to be served over HTTP during dev, or we can use a CORS proxy / the batch endpoint. We'll handle this via a `queryFn` in vue-query.
 
 > [!NOTE]
 > **Rate limit**: ip-api.com allows 45 requests/minute. For the scope of this assignment that's more than enough. We'll still implement rate-limit awareness by reading the `X-Rl` / `X-Ttl` headers.
@@ -50,14 +51,16 @@ Build a web application that **translates IP addresses into countries**. Users c
 
 ```mermaid
 graph TD
-    A["App.vue"] --> B["IpLookupCard.vue"]
+    M["main.ts"] -->|VueQueryPlugin| A["App.vue"]
+    A --> B["IpLookupCard.vue"]
     B --> C["IpRow.vue"]
     B --> D["AddButton.vue"]
     C --> E["useIpLookup composable"]
     C --> F["useLocalClock composable"]
-    E --> G["ipApi service"]
+    E -->|useQuery| G["ipApi service"]
     C --> H["IP Validation utils"]
 
+    style M fill:#2d2d2d,stroke:#9c27b0,color:#fff
     style A fill:#2d2d2d,stroke:#00bcd4,color:#fff
     style B fill:#2d2d2d,stroke:#00bcd4,color:#fff
     style C fill:#2d2d2d,stroke:#4caf50,color:#fff
@@ -81,7 +84,7 @@ graph TD
 
 | Composable | Responsibility |
 |---|---|
-| `useIpLookup` | Manages the lookup lifecycle for a single row: `lookup(ip)`, returns reactive `{ loading, result, error }` |
+| `useIpLookup` | Wraps `@tanstack/vue-query`'s `useQuery` with `enabled: false` for on-demand IP lookup. Returns `{ data, isLoading, isError, error, refetch }` |
 | `useLocalClock` | Given an IANA timezone string, returns a reactive `time` ref that ticks every second (`hh:mm:ss`) |
 
 ### Services & Utils
@@ -106,9 +109,10 @@ Scaffold with:
 npx -y create-vite@latest ./ --template vue-ts
 ```
 
-Then install test deps:
+Then install runtime + test deps:
 
 ```bash
+npm install @tanstack/vue-query
 npm install -D vitest @vue/test-utils jsdom
 ```
 
@@ -210,29 +214,40 @@ export function isValidIpv4(ip: string): boolean {
 
 #### [NEW] [useIpLookup.ts](file:///home/idan/workspaces/gemini/torq/src/composables/useIpLookup.ts)
 
-Reactive composable that wraps the API call:
+Reactive composable that wraps `@tanstack/vue-query`'s `useQuery` for on-demand IP lookup:
 
 ```typescript
-export function useIpLookup() {
-  const loading = ref(false);
-  const result = ref<IpApiResponse | null>(null);
-  const error = ref<string | null>(null);
+import { ref, computed } from 'vue';
+import { useQuery } from '@tanstack/vue-query';
+import { lookupIp } from '@/services/ipApi';
+import type { IpApiResponse } from '@/types';
 
-  async function lookup(ip: string) {
-    loading.value = true;
-    error.value = null;
-    try {
-      result.value = await lookupIp(ip);
-    } catch (e) {
-      error.value = (e as Error).message;
-    } finally {
-      loading.value = false;
-    }
+export function useIpLookup() {
+  const ip = ref('');
+
+  const { data, isLoading, isError, error, refetch } = useQuery<IpApiResponse>({
+    queryKey: computed(() => ['ip-lookup', ip.value]),
+    queryFn: () => lookupIp(ip.value),
+    enabled: false,   // only fetch on manual refetch()
+    retry: 1,
+    staleTime: 5 * 60 * 1000, // cache results for 5 min
+  });
+
+  async function lookup(ipAddress: string) {
+    ip.value = ipAddress;
+    await refetch();
   }
 
-  return { loading, result, error, lookup };
+  return { data, isLoading, isError, error, lookup };
 }
 ```
+
+**Why vue-query?**
+- **Built-in loading/error states** — no manual `ref<boolean>` bookkeeping
+- **Automatic caching** — re-querying the same IP is instant
+- **Retry logic** — transient network errors are retried automatically
+- **Devtools** — `@tanstack/vue-query-devtools` can be added for debugging
+- **`enabled: false`** — queries are dormant until the user blurs the input, matching the assignment's on-demand search requirement
 
 #### [NEW] [useLocalClock.ts](file:///home/idan/workspaces/gemini/torq/src/composables/useLocalClock.ts)
 
@@ -268,6 +283,11 @@ export function useLocalClock(timezone: Ref<string | null>) {
 ---
 
 ### Components
+
+#### [NEW] [main.ts](file:///home/idan/workspaces/gemini/torq/src/main.ts)
+
+- Creates the Vue app and installs `VueQueryPlugin` from `@tanstack/vue-query`
+- Optionally adds `VueQueryDevtools` in dev mode
 
 #### [NEW] [App.vue](file:///home/idan/workspaces/gemini/torq/src/App.vue)
 
@@ -305,6 +325,8 @@ export function useLocalClock(timezone: Ref<string | null>) {
 
 **Props:** `rowNumber`, `modelValue` (the IP string)  
 **Emits:** `update:modelValue`
+
+Internally calls `useIpLookup()` which returns vue-query's reactive `data`, `isLoading`, `isError`, and `error` refs.
 
 **Behavior per phase:**
 
@@ -367,7 +389,7 @@ Key UI details from the mocks:
 |---|---|
 | `validateIp.spec.ts` | Valid IPs, invalid IPs, edge cases (empty, spaces, IPv6) |
 | `ipApi.spec.ts` | Mock `fetch` — success, fail response, network error |
-| `useIpLookup.spec.ts` | Loading state transitions, error handling |
+| `useIpLookup.spec.ts` | vue-query integration: loading states, caching, error handling (with `QueryClient` wrapper) |
 | `useLocalClock.spec.ts` | Clock ticks, timezone changes, cleanup |
 | `IpRow.spec.ts` | Renders input, blur triggers lookup, shows spinner, shows result |
 | `IpLookupCard.spec.ts` | Add button adds rows, initial row present |
@@ -420,7 +442,7 @@ graph LR
 
 | Step | Details | Est. effort |
 |---|---|---|
-| **1. Scaffold** | `create-vite` + install deps + configure Vitest | 5 min |
+| **1. Scaffold** | `create-vite` + install deps (`@tanstack/vue-query`, vitest) + configure | 5 min |
 | **2. Types & Utils** | TypeScript interfaces + IP validation | 10 min |
 | **3. API Service** | `ipApi.ts` with fetch wrapper | 10 min |
 | **4. Composables** | `useIpLookup` + `useLocalClock` | 15 min |
