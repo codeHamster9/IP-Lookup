@@ -42,11 +42,9 @@ async function onBlur() {
   }
 }
 
-function countryCodeToFlag(code: string): string {
+function countryCodeToFlagUrl(code: string): string {
   if (!code) return '';
-  return [...code.toUpperCase()]
-    .map(c => String.fromCodePoint(0x1F1E6 - 65 + c.charCodeAt(0)))
-    .join('');
+  return `https://flagcdn.com/w40/${code.toLowerCase()}.png`;
 }
 </script>
 
@@ -70,7 +68,15 @@ function countryCodeToFlag(code: string): string {
         
         <!-- Result: Flag & Clock -->
         <div v-if="showResult" class="result">
-          <span class="flag" :title="data?.country">{{ countryCodeToFlag(data?.countryCode || '') }}</span>
+          <img
+            v-if="data?.countryCode"
+            class="flag"
+            :src="countryCodeToFlagUrl(data.countryCode)"
+            :alt="data?.country || data?.countryCode"
+            :title="data?.country"
+            width="24"
+            height="18"
+          />
           <span class="clock">{{ time }}</span>
         </div>
       </div>
@@ -163,9 +169,12 @@ input:disabled {
 }
 
 .flag {
-  font-size: 1.5rem;
-  line-height: 1;
+  width: 24px;
+  height: 18px;
+  border-radius: 2px;
+  object-fit: cover;
   cursor: help;
+  box-shadow: 0 0 2px rgba(0, 0, 0, 0.15);
 }
 
 .clock {
