@@ -1,18 +1,25 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, memo } from 'react';
 import { useIpLookup } from '../../hooks/useIpLookup';
 import { useLocalTime } from '../../hooks/useLocalTime';
 import { isValidIpv4 } from '../../utils/validateIp';
 import { countryCodeToFlag } from '../../utils/countryFlag';
 import styles from './IpRow.module.css';
 
-interface IpRowProps {
+export interface IpRowProps {
+  id: string;
   rowNumber: number;
   autoFocus?: boolean;
   onAutoFocused?: () => void;
-  onRemove?: () => void;
+  onRemove?: (id: string) => void;
 }
 
-export function IpRow({ rowNumber, autoFocus, onAutoFocused, onRemove }: IpRowProps) {
+export const IpRow = memo(function IpRow({
+  id,
+  rowNumber,
+  autoFocus,
+  onAutoFocused,
+  onRemove,
+}: IpRowProps) {
   const [ip, setIp] = useState('');
   const [submitted, setSubmitted] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
@@ -70,7 +77,7 @@ export function IpRow({ rowNumber, autoFocus, onAutoFocused, onRemove }: IpRowPr
         <button
           className={styles.removeBtn}
           type="button"
-          onClick={onRemove}
+          onClick={() => onRemove?.(id)}
           aria-label="Remove row"
         >
           ✕
@@ -100,4 +107,4 @@ export function IpRow({ rowNumber, autoFocus, onAutoFocused, onRemove }: IpRowPr
       )}
     </div>
   );
-}
+});

@@ -13,8 +13,11 @@ export const useClockStore = create<ClockState>(() => ({
  * Called once at app init (e.g. in main.tsx).
  * Every subscriber re-renders once per second.
  */
+let clockInterval: ReturnType<typeof setInterval> | null = null;
+
 export function startClock() {
-  setInterval(() => {
+  if (clockInterval) return;
+  clockInterval = setInterval(() => {
     useClockStore.setState({ now: Date.now() });
   }, 1000);
 }

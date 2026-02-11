@@ -9,7 +9,4 @@ export interface IpApiResponse {
 
 export interface IpRowState {
   id: string;
-  ip: string;
 }
-
-export type LookupStatus = 'idle' | 'loading' | 'success' | 'error';

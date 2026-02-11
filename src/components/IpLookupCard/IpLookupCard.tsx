@@ -8,7 +8,7 @@ import styles from './IpLookupCard.module.css';
 const ROW_HEIGHT = 52;
 
 function createRow(): IpRowState {
-  return { id: crypto.randomUUID(), ip: '' };
+  return { id: crypto.randomUUID() };
 }
 
 export function IpLookupCard() {
@@ -31,6 +31,10 @@ export function IpLookupCard() {
 
   const removeRow = useCallback((id: string) => {
     setRows((prev) => prev.filter((r) => r.id !== id));
+  }, []);
+
+  const handleAutoFocused = useCallback(() => {
+    setFocusRowId(null);
   }, []);
 
   // Auto-scroll to the new row after it's appended
@@ -61,9 +65,7 @@ export function IpLookupCard() {
               <ellipse rx="11" ry="4.2" transform="rotate(120)" />
             </g>
           </svg>
-          <button className={styles.closeBtn} type="button" aria-label="Close">
-            ✕
-          </button>
+
         </div>
       </div>
 
@@ -100,10 +102,11 @@ export function IpLookupCard() {
                 }}
               >
                 <IpRow
+                  id={row.id}
                   rowNumber={virtualRow.index + 1}
                   autoFocus={shouldFocus}
-                  onAutoFocused={() => setFocusRowId(null)}
-                  onRemove={rows.length > 1 ? () => removeRow(row.id) : undefined}
+                  onAutoFocused={handleAutoFocused}
+                  onRemove={rows.length > 1 ? removeRow : undefined}
                 />
               </div>
             );
