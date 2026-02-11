@@ -72,8 +72,9 @@ export function IpLookupCard() {
               <div
                 className={styles.virtualRow}
                 key={row.id}
+                data-index={virtualRow.index}
+                ref={virtualizer.measureElement}
                 style={{
-                  height: `${virtualRow.size}px`,
                   transform: `translateY(${virtualRow.start}px)`,
                 }}
               >
