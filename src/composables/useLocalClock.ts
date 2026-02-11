@@ -1,13 +1,22 @@
-import { ref, watch, onUnmounted, type Ref } from 'vue';
+import { ref, watch, type Ref } from 'vue';
+import { useGlobalClock } from './useGlobalClock';
 
+/**
+ * Composable that formats the global clock time for a specific timezone.
+ * Uses a shared global timer to minimize overhead when multiple instances are active.
+ */
 export function useLocalClock(timezone: Ref<string | null | undefined>) {
   const time = ref('');
-  let intervalId: number | null = null;
+  const { currentTime } = useGlobalClock();
 
-  function tick() {
-    if (!timezone.value) return;
+  function formatTime() {
+    if (!timezone.value) {
+      time.value = '';
+      return;
+    }
+    
     try {
-      time.value = new Date().toLocaleTimeString('en-GB', {
+      time.value = currentTime.value.toLocaleTimeString('en-GB', {
         timeZone: timezone.value,
         hour: '2-digit',
         minute: '2-digit',
@@ -19,26 +28,11 @@ export function useLocalClock(timezone: Ref<string | null | undefined>) {
     }
   }
 
-  watch(
-    timezone,
-    (tz) => {
-      if (intervalId) {
-        clearInterval(intervalId);
-        intervalId = null;
-      }
-      if (tz) {
-        tick();
-        intervalId = window.setInterval(tick, 1000);
-      } else {
-        time.value = '';
-      }
-    },
-    { immediate: true }
-  );
+  // Watch timezone changes
+  watch(timezone, formatTime, { immediate: true });
 
-  onUnmounted(() => {
-    if (intervalId) clearInterval(intervalId);
-  });
+  // Watch global clock updates
+  watch(currentTime, formatTime);
 
   return { time };
 }
