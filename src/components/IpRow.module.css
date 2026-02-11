@@ -20,7 +20,7 @@
 }
 
 .input {
-  flex: 1;
+  flex: 0 290px;
   min-width: 0;
   padding: 8px 12px;
   font-size: 0.9rem;
@@ -47,7 +47,7 @@
   gap: 8px;
   min-width: 160px;
   font-size: 0.875rem;
-  flex-shrink: 0;
+  flex: 1;
 }
 
 .flag {
@@ -62,6 +62,7 @@
 .time {
   color: var(--color-text-secondary);
   font-variant-numeric: tabular-nums;
+  margin-left: auto;
 }
 
 .error {
