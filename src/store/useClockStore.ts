@@ -21,3 +21,10 @@ export function startClock() {
     useClockStore.setState({ now: Date.now() });
   }, 1000);
 }
+
+export function stopClock() {
+  if (clockInterval) {
+    clearInterval(clockInterval);
+    clockInterval = null;
+  }
+}
