@@ -1,8 +1,8 @@
 import { useState, useCallback, memo } from 'react';
 import { useIpLookup } from '../../hooks/useIpLookup';
-import { useLocalTime } from '../../hooks/useLocalTime';
 import { isValidIpv4 } from '../../utils/validateIp';
 import { countryCodeToFlag } from '../../utils/countryFlag';
+import { LocalClock } from '../LocalClock/LocalClock';
 import styles from './IpRow.module.css';
 
 export interface IpRowProps {
@@ -28,8 +28,7 @@ export const IpRow = memo(function IpRow({
   const isValid = isValidIpv4(ip);
   const { data, isLoading, error } = useIpLookup(ip, submitted && isValid);
 
-  // Derive local time from the global clock store
-  const localTime = useLocalTime(data?.timezone ?? null);
+
 
   const handleBlur = useCallback(() => {
     const trimmed = ip.trim();
@@ -102,7 +101,7 @@ export const IpRow = memo(function IpRow({
             {countryCodeToFlag(data.countryCode)}
           </span>
           <span className={styles.country}>{data.country}</span>
-          <span className={styles.time}>{localTime}</span>
+          <LocalClock timezone={data.timezone} className={styles.time} />
         </div>
       )}
     </div>
