@@ -1,8 +1,8 @@
 import { useState, useCallback } from 'react';
-import { useIpLookup } from '../hooks/useIpLookup';
-import { useLocalTime } from '../hooks/useLocalTime';
-import { isValidIpv4 } from '../utils/validateIp';
-import { countryCodeToFlag } from '../utils/countryFlag';
+import { useIpLookup } from '../../hooks/useIpLookup';
+import { useLocalTime } from '../../hooks/useLocalTime';
+import { isValidIpv4 } from '../../utils/validateIp';
+import { countryCodeToFlag } from '../../utils/countryFlag';
 import styles from './IpRow.module.css';
 
 interface IpRowProps {

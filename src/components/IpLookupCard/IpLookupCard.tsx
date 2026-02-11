@@ -1,8 +1,8 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
-import type { IpRowState } from '../types';
-import { IpRow } from './IpRow';
-import { AddButton } from './AddButton';
+import type { IpRowState } from '../../types';
+import { IpRow } from '../IpRow/IpRow';
+import { AddButton } from '../AddButton/AddButton';
 import styles from './IpLookupCard.module.css';
 
 const ROW_HEIGHT = 52;
