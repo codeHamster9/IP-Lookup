@@ -25,7 +25,9 @@ Build a web application that **translates IP addresses into countries**. Users c
 | Framework | **React 18** (functional components + hooks) | Industry-standard, excellent ecosystem |
 | Language | **TypeScript** | Explicitly preferred by Torq |
 | Build tool | **Vite** | Fastest DX, first-class React/TS support |
-| State | **React hooks** (`useState`, `useCallback`) | App is small; no need for Redux/Zustand |
+| Global Clock | **Zustand** | Single shared clock tick — one `setInterval` for the whole app |
+| Data Fetching | **TanStack Query (React Query)** | Server-state management, caching, deduplication |
+| Virtualization | **TanStack Virtual** (`@tanstack/react-virtual`) | Renders only visible rows — handles thousands of rows without DOM bloat |
 | Styling | **CSS Modules** (`.module.css`) | Scoped styles, zero runtime, no extra deps |
 | API | **ip-api.com** (`http://ip-api.com/json/{ip}`) | Free, no API key, returns `country`, `countryCode`, `timezone` |
 | Testing | **Vitest + React Testing Library** | Native Vite integration, idiomatic React testing |
@@ -50,8 +52,9 @@ graph TD
     A["App.tsx"] --> B["IpLookupCard.tsx"]
     B --> C["IpRow.tsx"]
     B --> D["AddButton.tsx"]
-    C --> E["useIpLookup hook"]
-    C --> F["useLocalClock hook"]
+    C --> E["useIpLookup (React Query)"]
+    C --> F["useLocalTime hook"]
+    F --> I["useClockStore (Zustand)"]
     E --> G["ipApi service"]
     C --> H["IP Validation utils"]
 
@@ -61,6 +64,7 @@ graph TD
     style D fill:#2d2d2d,stroke:#4caf50,color:#fff
     style E fill:#2d2d2d,stroke:#ff9800,color:#fff
     style F fill:#2d2d2d,stroke:#ff9800,color:#fff
+    style I fill:#2d2d2d,stroke:#9c27b0,color:#fff
     style G fill:#2d2d2d,stroke:#e91e63,color:#fff
     style H fill:#2d2d2d,stroke:#e91e63,color:#fff
 ```
@@ -70,16 +74,22 @@ graph TD
 | Component | Responsibility |
 |---|---|
 | `App.tsx` | Root — mounts the card, provides global layout |
-| `IpLookupCard.tsx` | Card container with header ("IP Lookup"), subtitle, "✕" close button, "+ Add" button, and list of rows |
+| `IpLookupCard.tsx` | Card container with header, subtitle, "+ Add" button, and **virtualized** list of rows |
 | `IpRow.tsx` | Single row: row number badge, text input, spinner/flag/error indicator, real-time clock |
 | `AddButton.tsx` | Simple styled "+ Add" button |
+
+### Global Clock Store (Zustand)
+
+| Store | Responsibility |
+|---|---|
+| `useClockStore` | Holds a single `now` timestamp that ticks every second via one shared `setInterval`. All rows subscribe to this store instead of each running its own timer. |
 
 ### Custom Hooks
 
 | Hook | Responsibility |
 |---|---|
-| `useIpLookup` | Manages the lookup lifecycle for a single row: `lookup(ip)`, returns `{ loading, result, error }` |
-| `useLocalClock` | Given an IANA timezone string, returns a `time` string that ticks every second (`hh:mm:ss`) |
+| `useIpLookup` | Wraps `useQuery` to fetch IP data. Handles caching and row-specific lookup status. |
+| `useLocalTime` | Reads `now` from `useClockStore` and formats it to `hh:mm:ss` for a given IANA timezone. Pure derivation, no timer. |
 
 ### Services & Utils
 
@@ -103,9 +113,10 @@ Scaffold with:
 npx -y create-vite@latest ./ --template react-ts
 ```
 
-Then install test deps:
+Then install main and test deps:
 
 ```bash
+npm install zustand @tanstack/react-query @tanstack/react-virtual
 npm install -D vitest @testing-library/react @testing-library/jest-dom @testing-library/user-event jsdom
 ```
 
@@ -126,7 +137,9 @@ torq/
 │   │   └── AddButton.module.css
 │   ├── hooks/
 │   │   ├── useIpLookup.ts
-│   │   └── useLocalClock.ts
+│   │   └── useLocalTime.ts
+│   ├── store/
+│   │   └── useClockStore.ts
 │   ├── services/
 │   │   └── ipApi.ts
 │   ├── utils/
@@ -206,73 +219,72 @@ export function isValidIpv4(ip: string): boolean {
 
 ---
 
+### Global Clock Store
+
+#### [NEW] [useClockStore.ts](file:///home/idan/workspaces/gemini/torq/src/store/useClockStore.ts)
+
+A single `setInterval` ticks every second and writes `Date.now()` to the store. Every component that subscribes (via `useLocalTime`) re-renders once per second.
+
+```typescript
+import { create } from 'zustand';
+
+interface ClockState {
+  now: number; // epoch ms
+}
+
+export const useClockStore = create<ClockState>(() => ({
+  now: Date.now(),
+}));
+
+// Start the global tick — called once at app init (e.g. in main.tsx)
+export function startClock() {
+  setInterval(() => {
+    useClockStore.setState({ now: Date.now() });
+  }, 1000);
+}
+```
+
 ### Custom Hooks
 
 #### [NEW] [useIpLookup.ts](file:///home/idan/workspaces/gemini/torq/src/hooks/useIpLookup.ts)
 
-Custom hook that wraps the API call with React state:
+Custom hook that wraps `useQuery` for IP lookups:
 
 ```typescript
-import { useState, useCallback } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { lookupIp } from '../services/ipApi';
-import type { IpApiResponse } from '../types';
 
-export function useIpLookup() {
-  const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<IpApiResponse | null>(null);
-  const [error, setError] = useState<string | null>(null);
-
-  const lookup = useCallback(async (ip: string) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await lookupIp(ip);
-      setResult(data);
-    } catch (e) {
-      setError((e as Error).message);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  return { loading, result, error, lookup };
+export function useIpLookup(ip: string, enabled: boolean) {
+  return useQuery({
+    queryKey: ['ipLookup', ip],
+    queryFn: () => lookupIp(ip),
+    enabled: enabled && !!ip,
+    retry: false,
+    staleTime: Infinity, // IP locations don't change often
+  });
 }
 ```
 
-#### [NEW] [useLocalClock.ts](file:///home/idan/workspaces/gemini/torq/src/hooks/useLocalClock.ts)
+#### [NEW] [useLocalTime.ts](file:///home/idan/workspaces/gemini/torq/src/hooks/useLocalTime.ts)
 
-Real-time ticking clock for a given timezone:
+Derives the formatted local time from the global clock — **no timer of its own**:
 
 ```typescript
-import { useState, useEffect } from 'react';
+import { useMemo } from 'react';
+import { useClockStore } from '../store/useClockStore';
 
-export function useLocalClock(timezone: string | null) {
-  const [time, setTime] = useState('');
+export function useLocalTime(timezone: string | null): string {
+  const now = useClockStore((s) => s.now);
 
-  useEffect(() => {
-    if (!timezone) {
-      setTime('');
-      return;
-    }
-
-    function tick() {
-      setTime(
-        new Date().toLocaleTimeString('en-GB', {
-          timeZone: timezone!,
-          hour: '2-digit',
-          minute: '2-digit',
-          second: '2-digit',
-        })
-      );
-    }
-
-    tick();
-    const intervalId = window.setInterval(tick, 1000);
-
-    return () => clearInterval(intervalId);
-  }, [timezone]);
-
-  return time;
+  return useMemo(() => {
+    if (!timezone) return '';
+    return new Date(now).toLocaleTimeString('en-GB', {
+      timeZone: timezone,
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+    });
+  }, [now, timezone]);
 }
 ```
 
@@ -304,14 +316,34 @@ export function useLocalClock(timezone: string | null) {
 ```
 
 **State management:**
-- `rows` state via `useState<IpRowState[]>` — array of row states
-- `addRow()` — appends a new row with a unique id (`crypto.randomUUID()`)
-- `removeRow(id)` — removes a row (optional, not in mocks but good UX)
-- `updateRow(id, patch)` — updates a row's state (controlled component pattern)
+- `rows` managed via local `useState<IpRowState[]>`
+- `addRow()` / `removeRow(id)` are local handler functions
+
+**Virtualization:**
+- Uses `useVirtualizer` from `@tanstack/react-virtual` to render only visible rows
+- The row list container has a fixed max-height with overflow scroll
+- `estimateSize` returns the fixed row height; only rows in the viewport are mounted
+- This lets the app scale to hundreds/thousands of rows without DOM performance issues
+
+```typescript
+const virtualizer = useVirtualizer({
+  count: rows.length,
+  getScrollElement: () => scrollRef.current,
+  estimateSize: () => ROW_HEIGHT,
+  overscan: 5,
+});
+```
 
 **Behavior:**
-- Starts with one empty row on mount (initialized in `useState`)
+- Starts with one empty row on mount
 - "+ Add" appends a new row
+- `main.tsx` calls `startClock()` once & wraps app in `QueryClientProvider`
+
+**Auto-focus & auto-scroll on add:**
+- `addRow()` sets a `focusRowId` state to the newly created row's id
+- After state update, calls `virtualizer.scrollToIndex(rows.length - 1)` to scroll the new row into view
+- `IpRow` receives an `autoFocus` prop; when `true`, its input is focused on mount via a `ref` callback (`el?.focus()`)
+- `focusRowId` is cleared after the row mounts to avoid re-focusing on re-renders
 
 #### [NEW] [IpRow.tsx](file:///home/idan/workspaces/gemini/torq/src/components/IpRow.tsx)
 
@@ -414,15 +446,17 @@ jobs:
 graph LR
     S["1. Scaffold project"] --> T["2. Types & Utils"]
     T --> SVC["3. API Service"]
-    SVC --> HK["4. Custom Hooks"]
-    HK --> UI["5. Components & Styling"]
-    UI --> TST["6. Unit Tests"]
-    TST --> CI["7. CI/CD"]
-    CI --> POL["8. Polish & README"]
+    SVC --> ST["4. Zustand Store"]
+    ST --> HK["5. React Query Hooks"]
+    HK --> UI["6. Components & Styling"]
+    UI --> TST["7. Unit Tests"]
+    TST --> CI["8. CI/CD"]
+    CI --> POL["9. Polish & README"]
 
     style S fill:#1a1a2e,stroke:#61dafb,color:#fff
     style T fill:#1a1a2e,stroke:#61dafb,color:#fff
     style SVC fill:#1a1a2e,stroke:#4caf50,color:#fff
+    style ST fill:#1a1a2e,stroke:#9c27b0,color:#fff
     style HK fill:#1a1a2e,stroke:#4caf50,color:#fff
     style UI fill:#1a1a2e,stroke:#ff9800,color:#fff
     style TST fill:#1a1a2e,stroke:#e91e63,color:#fff
@@ -432,14 +466,15 @@ graph LR
 
 | Step | Details | Est. effort |
 |---|---|---|
-| **1. Scaffold** | `create-vite` with `react-ts` template + install deps + configure Vitest | 5 min |
+| **1. Scaffold** | `create-vite` + install deps (zustand, react-query) | 5 min |
 | **2. Types & Utils** | TypeScript interfaces + IP validation | 10 min |
 | **3. API Service** | `ipApi.ts` with fetch wrapper | 10 min |
-| **4. Custom Hooks** | `useIpLookup` + `useLocalClock` | 15 min |
-| **5. Components** | `App`, `IpLookupCard`, `IpRow`, `AddButton` + all CSS Modules | 30 min |
-| **6. Tests** | Unit tests for all layers | 20 min |
-| **7. CI/CD** | GitHub Actions workflow | 5 min |
-| **8. Polish** | README, cleanup, final visual QA | 10 min |
+| **4. Clock Store** | `useClockStore.ts` — global tick + `startClock()` | 5 min |
+| **5. Hooks** | `useIpLookup` (React Query) + `useLocalTime` | 15 min |
+| **6. Components** | `App`, `IpLookupCard`, `IpRow`, `AddButton` | 30 min |
+| **7. Tests** | Unit & Hook tests | 20 min |
+| **8. CI/CD** | GitHub Actions workflow | 5 min |
+| **9. Polish** | QA, README | 10 min |
 
 ---
 
