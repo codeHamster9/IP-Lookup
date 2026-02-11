@@ -29,6 +29,10 @@ export function IpLookupCard() {
     setFocusRowId(newRow.id);
   }, []);
 
+  const removeRow = useCallback((id: string) => {
+    setRows((prev) => prev.filter((r) => r.id !== id));
+  }, []);
+
   // Auto-scroll to the new row after it's appended
   useEffect(() => {
     if (focusRowId) {
@@ -82,6 +86,7 @@ export function IpLookupCard() {
                   rowNumber={virtualRow.index + 1}
                   autoFocus={shouldFocus}
                   onAutoFocused={() => setFocusRowId(null)}
+                  onRemove={rows.length > 1 ? () => removeRow(row.id) : undefined}
                 />
               </div>
             );

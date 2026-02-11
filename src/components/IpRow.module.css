@@ -87,3 +87,24 @@
     transform: rotate(360deg);
   }
 }
+
+.removeBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: #bbb;
+  font-size: 0.8rem;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.15s, color 0.15s;
+}
+
+.removeBtn:hover {
+  background: #fce4ec;
+  color: #e53935;
+}

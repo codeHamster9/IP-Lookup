@@ -9,9 +9,10 @@ interface IpRowProps {
   rowNumber: number;
   autoFocus?: boolean;
   onAutoFocused?: () => void;
+  onRemove?: () => void;
 }
 
-export function IpRow({ rowNumber, autoFocus, onAutoFocused }: IpRowProps) {
+export function IpRow({ rowNumber, autoFocus, onAutoFocused, onRemove }: IpRowProps) {
   const [ip, setIp] = useState('');
   const [submitted, setSubmitted] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
@@ -64,6 +65,17 @@ export function IpRow({ rowNumber, autoFocus, onAutoFocused }: IpRowProps) {
           }
         }}
       />
+
+      {onRemove && (
+        <button
+          className={styles.removeBtn}
+          type="button"
+          onClick={onRemove}
+          aria-label="Remove row"
+        >
+          ✕
+        </button>
+      )}
 
       {isLoading && <div className={styles.spinner} />}
 
