@@ -80,6 +80,7 @@ export function IpLookupCard() {
                 <IpRow
                   rowNumber={virtualRow.index + 1}
                   autoFocus={shouldFocus}
+                  onAutoFocused={() => setFocusRowId(null)}
                 />
               </div>
             );

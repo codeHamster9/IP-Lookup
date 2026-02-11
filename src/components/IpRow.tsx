@@ -8,9 +8,10 @@ import styles from './IpRow.module.css';
 interface IpRowProps {
   rowNumber: number;
   autoFocus?: boolean;
+  onAutoFocused?: () => void;
 }
 
-export function IpRow({ rowNumber, autoFocus }: IpRowProps) {
+export function IpRow({ rowNumber, autoFocus, onAutoFocused }: IpRowProps) {
   const [ip, setIp] = useState('');
   const [submitted, setSubmitted] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
@@ -56,7 +57,12 @@ export function IpRow({ rowNumber, autoFocus }: IpRowProps) {
         onChange={handleChange}
         onBlur={handleBlur}
         disabled={isLoading}
-        ref={autoFocus ? (el) => el?.focus() : undefined}
+        ref={(el) => {
+          if (autoFocus && el) {
+            el.focus();
+            onAutoFocused?.();
+          }
+        }}
       />
 
       {isLoading && <div className={styles.spinner} />}
