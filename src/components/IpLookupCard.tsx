@@ -44,10 +44,27 @@ export function IpLookupCard() {
     <div className={styles.card}>
       {/* Header */}
       <div className={styles.header}>
-        <h1 className={styles.title}>IP Lookup</h1>
-        <button className={styles.closeBtn} type="button" aria-label="Close">
-          ✕
-        </button>
+        <div className={styles.titleGroup}>
+          <h1 className={styles.title}>IP Lookup</h1>
+          <span className={styles.versionBadge}>React version</span>
+        </div>
+        <div className={styles.headerIcons}>
+          <svg
+            className={styles.reactLogo}
+            viewBox="-11.5 -10.23174 23 20.46348"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <circle cx="0" cy="0" r="2.05" fill="#61dafb" />
+            <g stroke="#61dafb" strokeWidth="1" fill="none">
+              <ellipse rx="11" ry="4.2" />
+              <ellipse rx="11" ry="4.2" transform="rotate(60)" />
+              <ellipse rx="11" ry="4.2" transform="rotate(120)" />
+            </g>
+          </svg>
+          <button className={styles.closeBtn} type="button" aria-label="Close">
+            ✕
+          </button>
+        </div>
       </div>
 
       {/* Subtitle */}
