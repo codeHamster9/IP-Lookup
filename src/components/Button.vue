@@ -8,6 +8,7 @@ interface Props {
   title?: string;
   variant?: 'ghost' | 'primary' | 'danger';
   color?: string;
+  tabindex?: string | number;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -29,6 +30,7 @@ const emit = defineEmits<{
     :title="title || label" 
     type="button"
     :style="color ? { '--btn-color': color } : {}"
+    :tabindex="tabindex"
   >
     <component :is="icon" :size="size" />
     <span v-if="label" class="btn-label">{{ label }}</span>

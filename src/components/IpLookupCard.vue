@@ -72,6 +72,7 @@ function removeAll() {
           title="Remove All" 
           :size="18"
           color="#ff5252"
+          tabindex="-1"
         />
       </div>
 

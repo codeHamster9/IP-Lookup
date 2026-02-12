@@ -79,6 +79,7 @@ function countryCodeToFlagUrl(code: string): string {
           :icon="Trash2" 
           title="Remove row" 
           :size="16" 
+          tabindex="-1"
         />
 
         <!-- Loading Spinner -->
