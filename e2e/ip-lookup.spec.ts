@@ -37,7 +37,7 @@ test.describe('Core Functional', () => {
     await input.fill('abc');
     await input.blur();
 
-    await expect(page.locator('.error-msg')).toContainText('Invalid IP address');
+    await expect(page.locator('.error-inline')).toContainText('Invalid IP address');
     expect(apiCalled).toBe(false);
   });
 
@@ -54,7 +54,7 @@ test.describe('Core Functional', () => {
     await input.blur();
 
     // No error, no API call
-    await expect(page.locator('.error-msg')).toHaveCount(0);
+    await expect(page.locator('.error-inline')).toHaveCount(0);
     expect(apiCalled).toBe(false);
   });
 
@@ -69,7 +69,7 @@ test.describe('Core Functional', () => {
     await input.fill('192.168.1.1');
     await input.blur();
 
-    await expect(page.locator('.api-error')).toContainText('private range', {
+    await expect(page.locator('.error-inline')).toContainText('private range', {
       timeout: 5000,
     });
   });
@@ -79,8 +79,8 @@ test.describe('Core Functional', () => {
     await page.goto('/');
 
     // Add extra rows
-    await page.locator('.add-btn').click();
-    await page.locator('.add-btn').click();
+    await page.getByRole('button', { name: 'Add' }).click();
+    await page.getByRole('button', { name: 'Add' }).click();
     expect(await page.locator('.ip-row').count()).toBe(3);
 
     // Enter an IP in the first row
@@ -90,11 +90,11 @@ test.describe('Core Functional', () => {
     await expect(page.locator('.result').first()).toBeVisible({ timeout: 5000 });
 
     // Click Clear All (✕)
-    await page.locator('.close-btn').click();
+    await page.getByTitle('Remove All').click();
 
-    // Should be back to one empty row
-    expect(await page.locator('.ip-row').count()).toBe(1);
-    await expect(page.locator('input').first()).toHaveValue('');
+    // Should be empty
+    expect(await page.locator('.ip-row').count()).toBe(0);
+    await expect(page.locator('.empty-state')).toContainText('No IP addresses added');
     await expect(page.locator('.result')).toHaveCount(0);
   });
 
@@ -142,7 +142,7 @@ test.describe('Multi-Row', () => {
 
     expect(await page.locator('.ip-row').count()).toBe(1);
 
-    await page.locator('.add-btn').click();
+    await page.getByRole('button', { name: 'Add' }).click();
     expect(await page.locator('.ip-row').count()).toBe(2);
 
     // Badge numbers should be 1 and 2
@@ -175,8 +175,8 @@ test.describe('Multi-Row', () => {
     await page.goto('/');
 
     // Add 2 more rows (total 3)
-    await page.locator('.add-btn').click();
-    await page.locator('.add-btn').click();
+    await page.getByRole('button', { name: 'Add' }).click();
+    await page.getByRole('button', { name: 'Add' }).click();
 
     const inputs = page.locator('input');
     const ips = ['8.8.8.8', '1.1.1.1', '9.9.9.9'];
@@ -207,7 +207,7 @@ test.describe('Multi-Row', () => {
     await expect(page.locator('.result').first()).toBeVisible({ timeout: 5000 });
 
     // Add a new row
-    await page.locator('.add-btn').click();
+    await page.getByRole('button', { name: 'Add' }).click();
 
     // Row 1 result should still be visible
     await expect(page.locator('.result').first()).toBeVisible();
@@ -225,11 +225,11 @@ test.describe('UX Polish', () => {
     await input.blur();
 
     // Spinner should appear
-    await expect(page.locator('.spinner').first()).toBeVisible({ timeout: 2000 });
+    await expect(page.locator('.spinner-icon').first()).toBeVisible({ timeout: 2000 });
 
     // Then result should replace it
     await expect(page.locator('.result').first()).toBeVisible({ timeout: 5000 });
-    await expect(page.locator('.spinner')).toHaveCount(0);
+    await expect(page.locator('.spinner-icon')).toHaveCount(0);
   });
 
   test('clock ticks over time', async ({ page }) => {
