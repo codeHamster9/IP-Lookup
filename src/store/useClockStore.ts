@@ -8,23 +8,38 @@ export const useClockStore = create<ClockState>(() => ({
   now: Date.now(),
 }));
 
-/**
- * Start the global clock tick.
- * Called once at app init (e.g. in main.tsx).
- * Every subscriber re-renders once per second.
- */
+let subscriberCount = 0;
 let clockInterval: ReturnType<typeof setInterval> | null = null;
 
-export function startClock() {
-  if (clockInterval) return;
-  clockInterval = setInterval(() => {
-    useClockStore.setState({ now: Date.now() });
-  }, 1000);
+function startClock() {
+  if (!clockInterval) {
+    clockInterval = setInterval(() => {
+      useClockStore.setState({ now: Date.now() });
+    }, 1000);
+  }
 }
 
-export function stopClock() {
+function stopClock() {
   if (clockInterval) {
     clearInterval(clockInterval);
     clockInterval = null;
   }
 }
+
+/**
+ * Reference-counted clock subscription.
+ * Starts the global 1-second tick when the first subscriber appears,
+ * stops it when the last subscriber leaves.
+ *
+ * @returns cleanup function to call on unmount
+ */
+export function subscribeClock(): () => void {
+  subscriberCount++;
+  if (subscriberCount === 1) startClock();
+
+  return () => {
+    subscriberCount--;
+    if (subscriberCount === 0) stopClock();
+  };
+}
+

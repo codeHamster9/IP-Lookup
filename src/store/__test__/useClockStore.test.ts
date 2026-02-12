@@ -1,16 +1,14 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { useClockStore, startClock } from '../useClockStore';
+import { useClockStore, subscribeClock } from '../useClockStore';
 
 describe('useClockStore', () => {
     beforeEach(() => {
         vi.useFakeTimers();
     });
 
-    afterEach(async () => {
+    afterEach(() => {
         vi.clearAllTimers();
         vi.useRealTimers();
-        const { stopClock } = await import('../useClockStore');
-        stopClock();
     });
 
     it('should initialize with current time', () => {
@@ -19,27 +17,57 @@ describe('useClockStore', () => {
         expect(state.now).toBeCloseTo(Date.now(), -3); // Within 1s
     });
 
-    it('should update time every second when started', () => {
+    it('should start ticking on first subscriber and update every second', () => {
         const initialTime = useClockStore.getState().now;
-        
-        startClock();
 
-        vi.advanceTimersByTime(1000); // 1s
+        const unsubscribe = subscribeClock();
+
+        vi.advanceTimersByTime(1000);
         const timeAfter1s = useClockStore.getState().now;
         expect(timeAfter1s).toBeGreaterThan(initialTime);
 
-        vi.advanceTimersByTime(1000); // 1s
+        vi.advanceTimersByTime(1000);
         const timeAfter2s = useClockStore.getState().now;
         expect(timeAfter2s).toBeGreaterThan(timeAfter1s);
+
+        unsubscribe();
     });
 
-    it('should not start multiple intervals if called twice', () => {
+    it('should not start multiple intervals for multiple subscribers', () => {
         const setIntervalSpy = vi.spyOn(global, 'setInterval');
-        startClock();
-        startClock();
-        
-        // Should be called once (or kept as is if implementation checks for existing interval)
-        // With vi.useFakeTimers(), global.setInterval is a mock.
-        expect(setIntervalSpy).toHaveBeenCalledTimes(1); 
+
+        const unsub1 = subscribeClock();
+        const unsub2 = subscribeClock();
+
+        expect(setIntervalSpy).toHaveBeenCalledTimes(1);
+
+        unsub1();
+        unsub2();
+    });
+
+    it('should stop the clock when all subscribers leave', () => {
+        const clearIntervalSpy = vi.spyOn(global, 'clearInterval');
+
+        const unsub1 = subscribeClock();
+        const unsub2 = subscribeClock();
+
+        unsub1(); // still one subscriber left
+        expect(clearIntervalSpy).not.toHaveBeenCalled();
+
+        unsub2(); // last subscriber gone — clock should stop
+        expect(clearIntervalSpy).toHaveBeenCalledTimes(1);
+    });
+
+    it('should restart the clock when a new subscriber appears after all left', () => {
+        const setIntervalSpy = vi.spyOn(global, 'setInterval');
+
+        const unsub1 = subscribeClock();
+        unsub1(); // clock stops
+
+        const unsub2 = subscribeClock(); // clock starts again
+        expect(setIntervalSpy).toHaveBeenCalledTimes(2);
+
+        unsub2();
     });
 });
+
