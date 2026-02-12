@@ -1,7 +1,9 @@
 import { mount } from '@vue/test-utils';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { computed } from 'vue';
 import App from '@/App.vue';
 import { QueryClient, VueQueryPlugin } from '@tanstack/vue-query';
+import { createPinia } from 'pinia';
 
 // Mock fetch
 global.fetch = vi.fn();
@@ -12,9 +14,27 @@ function mountApp() {
   });
 
   return mount(App, {
-    global: { plugins: [[VueQueryPlugin, { queryClient }]] },
+    global: { plugins: [[VueQueryPlugin, { queryClient }], createPinia()] },
   });
 }
+
+// Mock Virtualizer
+vi.mock('@tanstack/vue-virtual', () => ({
+  useVirtualizer: (options: any) => {
+    return computed(() => ({
+      getVirtualItems: () => {
+        const count = options.value.count;
+        return Array.from({ length: count }, (_, i) => ({
+          index: i,
+          key: i,
+          size: 65,
+          start: i * 65,
+        }));
+      },
+      getTotalSize: () => options.value.count * 65,
+    }));
+  },
+}));
 
 describe('Integration Flow', () => {
   beforeEach(() => {
@@ -47,7 +67,7 @@ describe('Integration Flow', () => {
     // Robust wait
     await vi.waitUntil(() => wrapper.find('.flag').exists(), { timeout: 1000, interval: 50 });
     
-    expect(wrapper.find('.flag').text()).toBe('🇺🇸');
+    expect(wrapper.find('.flag').attributes('alt')).toBe('United States');
     expect(wrapper.find('.clock').exists()).toBe(true);
   });
 

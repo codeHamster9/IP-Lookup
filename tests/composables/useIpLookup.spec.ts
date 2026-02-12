@@ -54,6 +54,7 @@ describe('useIpLookup composable', () => {
     await promise;
     
     expect(lookupIp).toHaveBeenCalledWith('8.8.8.8');
+    await vi.waitUntil(() => result.data.value);
     expect(result.data.value).toEqual(mockData);
     expect(result.isError.value).toBe(false);
   });
@@ -68,6 +69,7 @@ describe('useIpLookup composable', () => {
       // refetch might not reject, useQuery handles error state
     }
     
+    await vi.waitUntil(() => result.isError.value, { timeout: 3000 });
     expect(result.isError.value).toBe(true);
     expect(result.error.value).toBeTruthy();
   });

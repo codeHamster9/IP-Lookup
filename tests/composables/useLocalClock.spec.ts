@@ -1,12 +1,14 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { useLocalClock } from '@/composables/useLocalClock';
-import { ref, defineComponent } from 'vue';
+import { ref, defineComponent, nextTick } from 'vue';
 import { mount } from '@vue/test-utils';
+import { createPinia, setActivePinia } from 'pinia';
 
 function mountClock(timezoneRef: any) {
   let result: any;
   const Wrapper = defineComponent({
     setup() {
+      setActivePinia(createPinia()); // Ensure active pinia before store use
       result = useLocalClock(timezoneRef);
       return () => null;
     },
@@ -41,9 +43,7 @@ describe('useLocalClock', () => {
     expect(result.time.value).toBe('12:00:00');
     
     vi.advanceTimersByTime(3000);
-    // await nextTick() might be needed if component updates are async
-    // logic is synchronous in interval callback, but Vue updates are async
-    // However, ref value is updated synchronously
+    await nextTick();
     expect(result.time.value).toBe('12:00:03');
   });
 

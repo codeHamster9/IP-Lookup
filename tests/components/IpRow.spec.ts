@@ -74,7 +74,7 @@ describe('IpRow.vue', () => {
     const wrapper = mount(IpRow, {
       props: { rowNumber: 1, modelValue: '8.8.8.8' },
     });
-    expect(wrapper.find('.spinner').exists()).toBe(true);
+    expect(wrapper.find('.spinner-icon').exists()).toBe(true);
     expect(wrapper.find('input').element.disabled).toBe(true);
   });
 
