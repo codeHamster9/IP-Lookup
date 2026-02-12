@@ -9,15 +9,27 @@ import Button from './Button.vue';
 const props = defineProps<{
   rowNumber: number;
   modelValue: string;
+  autoFocus?: boolean;
 }>();
 
 const emit = defineEmits<{
   (e: 'update:modelValue', value: string): void;
   (e: 'remove'): void;
+  (e: 'focused'): void;
 }>();
 
 const { data, isLoading, isError, error, lookup } = useIpLookup();
 const searchedIp = ref('');
+const inputRef = ref<HTMLInputElement | null>(null);
+
+import { onMounted } from 'vue';
+
+onMounted(() => {
+  if (props.autoFocus) {
+    inputRef.value?.focus();
+    emit('focused');
+  }
+});
 
 // Derived state
 const isValid = computed(() => isValidIpv4(props.modelValue));
@@ -69,6 +81,7 @@ function countryCodeToFlagUrl(code: string): string {
     <div class="row-content">
       <div class="input-wrapper">
         <input 
+          ref="inputRef"
           :value="modelValue"
           @input="emit('update:modelValue', ($event.target as HTMLInputElement).value)"
           @blur="onBlur"

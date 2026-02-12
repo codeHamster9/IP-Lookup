@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, nextTick } from 'vue';
 import { Trash2, Plus } from 'lucide-vue-next';
 import { useVirtualizer } from '@tanstack/vue-virtual';
 import IpRow from './IpRow.vue';
@@ -10,10 +10,12 @@ interface RowData {
   ip: string;
 }
 
+const initialId = crypto.randomUUID();
 const rows = ref<RowData[]>([
-  { id: crypto.randomUUID(), ip: '' }
+  { id: initialId, ip: '' }
 ]);
 
+const lastAddedId = ref<string | null>(initialId);
 const parentRef = ref<HTMLElement | null>(null);
 
 const virtualizer = useVirtualizer(
@@ -28,19 +30,32 @@ const virtualizer = useVirtualizer(
 const virtualRows = computed(() => virtualizer.value.getVirtualItems());
 const totalSize = computed(() => virtualizer.value.getTotalSize());
 
-function addRow() {
-  rows.value.push({ id: crypto.randomUUID(), ip: '' });
+async function addRow() {
+  const id = crypto.randomUUID();
+  rows.value.push({ id, ip: '' });
+  lastAddedId.value = id;
+  
+  // Wait for virtualizer to update count
+  await nextTick();
+  
+  // Scroll to the bottom
+  virtualizer.value.scrollToIndex(rows.value.length - 1, { align: 'end' });
 }
 
 function removeRow(id: string) {
   const index = rows.value.findIndex(r => r.id === id);
   if (index !== -1) {
     rows.value.splice(index, 1);
+    // Reset lastAddedId if we removed it
+    if (lastAddedId.value === id) {
+      lastAddedId.value = null;
+    }
   }
 }
 
 function removeAll() {
   rows.value = [];
+  lastAddedId.value = null;
 }
 </script>
 
@@ -99,9 +114,12 @@ function removeAll() {
           >
             <IpRow
               v-if="rows[virtualRow.index]"
+              :key="rows[virtualRow.index]!.id"
               :row-number="virtualRow.index + 1"
               v-model="rows[virtualRow.index]!.ip"
+              :auto-focus="rows[virtualRow.index]!.id === lastAddedId"
               @remove="removeRow(rows[virtualRow.index]!.id)"
+              @focused="lastAddedId = null"
             />
           </div>
         </div>
