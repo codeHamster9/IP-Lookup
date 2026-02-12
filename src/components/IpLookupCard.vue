@@ -6,12 +6,12 @@ import IpRow from './IpRow.vue';
 import Button from './Button.vue';
 
 interface RowData {
-  id: number;
+  id: string;
   ip: string;
 }
 
 const rows = ref<RowData[]>([
-  { id: Date.now(), ip: '' }
+  { id: crypto.randomUUID(), ip: '' }
 ]);
 
 const parentRef = ref<HTMLElement | null>(null);
@@ -29,10 +29,10 @@ const virtualRows = computed(() => virtualizer.value.getVirtualItems());
 const totalSize = computed(() => virtualizer.value.getTotalSize());
 
 function addRow() {
-  rows.value.push({ id: Date.now(), ip: '' });
+  rows.value.push({ id: crypto.randomUUID(), ip: '' });
 }
 
-function removeRow(id: number) {
+function removeRow(id: string) {
   const index = rows.value.findIndex(r => r.id === id);
   if (index !== -1) {
     rows.value.splice(index, 1);

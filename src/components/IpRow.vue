@@ -43,6 +43,9 @@ const errorMessage = computed(() => {
 
 async function onBlur() {
   const ip = props.modelValue.trim();
+  if (ip !== props.modelValue) {
+    emit('update:modelValue', ip);
+  }
   if (!ip) return;
   
   if (isValid.value) {

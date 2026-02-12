@@ -16,4 +16,3 @@ export interface IpRowState {
   isValid: boolean;
 }
 
-export type LookupStatus = 'idle' | 'loading' | 'success' | 'error';
