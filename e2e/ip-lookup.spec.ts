@@ -18,7 +18,7 @@ test.describe('Core Functional', () => {
     // Flag emoji for US
     await expect(result).toContainText('🇺🇸');
     // Clock should be visible
-    await expect(result.locator('[class*="time"]')).toBeVisible();
+    await expect(result.locator('span[class*="time"]')).toBeVisible();
   });
 
   test('2 — Invalid IP shows error', async ({ page }) => {
@@ -176,7 +176,7 @@ test.describe('UX Polish', () => {
     await input.fill('8.8.8.8');
     await input.blur();
 
-    const clock = getResult(page, 0).locator('[class*="time"]');
+    const clock = getResult(page, 0).locator('span[class*="time"]');
     await expect(clock).toBeVisible({ timeout: 5000 });
 
     // Read the initial time

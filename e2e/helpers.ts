@@ -66,9 +66,9 @@ export function getError(page: Page, index: number) {
   return page.locator('[class*="error"]').nth(index);
 }
 
-/** Click the "+ Add" button */
+/** Click the "Add" button */
 export async function clickAdd(page: Page) {
-  await page.getByRole('button', { name: '+ Add' }).click();
+  await page.getByRole('button', { name: 'Add' }).click();
 }
 
 /** Get the count of visible input rows  */
