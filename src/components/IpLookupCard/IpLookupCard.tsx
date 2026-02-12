@@ -16,6 +16,7 @@ export function IpLookupCard() {
   const [focusRowId, setFocusRowId] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
+  // eslint-disable-next-line react-hooks/incompatible-library
   const virtualizer = useVirtualizer({
     count: rows.length,
     getScrollElement: () => scrollRef.current,
