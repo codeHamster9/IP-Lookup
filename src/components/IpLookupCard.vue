@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { Trash2, Plus } from 'lucide-vue-next';
+import { useVirtualizer } from '@tanstack/vue-virtual';
 import IpRow from './IpRow.vue';
 import Button from './Button.vue';
 
@@ -12,6 +13,20 @@ interface RowData {
 const rows = ref<RowData[]>([
   { id: Date.now(), ip: '' }
 ]);
+
+const parentRef = ref<HTMLElement | null>(null);
+
+const virtualizer = useVirtualizer(
+  computed(() => ({
+    count: rows.value.length,
+    getScrollElement: () => parentRef.value,
+    estimateSize: () => 65,
+    overscan: 10,
+  }))
+);
+
+const virtualRows = computed(() => virtualizer.value.getVirtualItems());
+const totalSize = computed(() => virtualizer.value.getTotalSize());
 
 function addRow() {
   rows.value.push({ id: Date.now(), ip: '' });
@@ -60,14 +75,38 @@ function removeAll() {
         />
       </div>
 
-      <div class="rows-container">
-        <IpRow
-          v-for="(row, index) in rows"
-          :key="row.id"
-          :row-number="index + 1"
-          v-model="row.ip"
-          @remove="removeRow(row.id)"
-        />
+      <div class="rows-container" ref="parentRef">
+        <div
+          v-if="rows.length > 0"
+          :style="{
+            height: `${totalSize}px`,
+            width: '100%',
+            position: 'relative',
+          }"
+        >
+          <div
+            v-for="virtualRow in virtualRows"
+            :key="String(virtualRow.key)"
+            :style="{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: '100%',
+              height: `${virtualRow.size}px`,
+              transform: `translateY(${virtualRow.start}px)`,
+            }"
+          >
+            <IpRow
+              v-if="rows[virtualRow.index]"
+              :row-number="virtualRow.index + 1"
+              v-model="rows[virtualRow.index]!.ip"
+              @remove="removeRow(rows[virtualRow.index]!.id)"
+            />
+          </div>
+        </div>
+        <div v-else class="empty-state">
+          No IP addresses added. Click "Add" to start.
+        </div>
       </div>
     </div>
   </div>
@@ -146,6 +185,7 @@ function removeAll() {
   overflow-y: auto;
   border-top: 1px solid rgba(66, 184, 131, 0.2);
   padding: 0 24px;
+  position: relative;
   /* Green scrollbar styling */
   scrollbar-width: thin;
   scrollbar-color: #42b883 #e0f2f1;
@@ -163,6 +203,13 @@ function removeAll() {
   background-color: #42b883;
   border-radius: 4px;
   border: 2px solid #e0f2f1;
+}
+
+.empty-state {
+  padding: 40px;
+  text-align: center;
+  color: #90a4ae;
+  font-style: italic;
 }
 
 @keyframes float {
