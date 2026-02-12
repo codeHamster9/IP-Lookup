@@ -15,6 +15,13 @@ const rows = ref<RowData[]>([
 function addRow() {
   rows.value.push({ id: Date.now(), ip: '' });
 }
+
+function removeRow(id: number) {
+  const index = rows.value.findIndex(r => r.id === id);
+  if (index !== -1) {
+    rows.value.splice(index, 1);
+  }
+}
 </script>
 
 <template>
@@ -41,6 +48,7 @@ function addRow() {
           :key="row.id"
           :row-number="index + 1"
           v-model="row.ip"
+          @remove="removeRow(row.id)"
         />
       </div>
     </div>

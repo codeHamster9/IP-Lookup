@@ -11,6 +11,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: 'update:modelValue', value: string): void;
+  (e: 'remove'): void;
 }>();
 
 const { data, isLoading, isError, error, lookup } = useIpLookup();
@@ -71,6 +72,10 @@ function countryCodeToFlagUrl(code: string): string {
           :class="{ 'has-error': errorMessage }"
         />
         
+        <button class="remove-btn" @click="emit('remove')" title="Remove row">
+           ✕
+        </button>
+
         <!-- Loading Spinner -->
         <span v-if="isLoading" class="spinner"></span>
         
@@ -131,19 +136,51 @@ function countryCodeToFlagUrl(code: string): string {
   display: flex;
   align-items: center;
   position: relative;
-  width: 100%;
+  /* Wraps input + results */
 }
 
+/* Wraps input + results */
+
 input {
-  flex: 0 1 290px; 
-  padding: 10px 14px;
+  /* FIXED WIDTH as requested */
+  width: 290px;
+  flex: 0 0 290px; 
+  padding: 10px 14px; /* Standard padding */
   border: 1px solid #e0e0e0;
   border-radius: 8px;
   font-size: 1rem;
   outline: none;
-  min-width: 0; /* flex fix */
   transition: all 0.2s;
   background: #fff;
+}
+
+.remove-btn {
+  /* Static position next to input */
+  position: static;
+  transform: none;
+  background: transparent;
+  border: none;
+  color: #90a4ae;
+  font-size: 1.1rem;
+  cursor: pointer;
+  padding: 8px; 
+  border-radius: 50%;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 4px; /* Space between input and button */
+  flex-shrink: 0;
+}
+
+.remove-btn:hover {
+  background-color: #ffebee;
+  color: #ef5350;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(2px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 input:focus {
