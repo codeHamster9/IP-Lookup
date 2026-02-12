@@ -17,8 +17,10 @@ const { time } = useLocalClock(timezoneRef);
 <style scoped>
 .clock {
   font-family: 'Roboto Mono', monospace;
-  color: #333;
-  width: 7ch; /* approx width for 00:00:00 */
+  color: var(--color-text-secondary);
+  font-weight: 500;
+  width: 8ch; /* slightly wider for comfort */
   display: inline-block;
+  text-align: right;
 }
 </style>

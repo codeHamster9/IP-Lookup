@@ -25,6 +25,16 @@ const showResult = computed(() =>
   searchedIp.value === props.modelValue
 );
 
+const errorMessage = computed(() => {
+  if (props.modelValue && !isValid.value && !isLoading.value) {
+    return 'Invalid IP address';
+  }
+  if (isError.value && !isLoading.value && searchedIp.value === props.modelValue) {
+    return error.value?.message;
+  }
+  return null;
+});
+
 // Watch for external model changes to reset if needed? 
 // No, handled by showResult check (modelValue vs searchedIp).
 
@@ -58,14 +68,14 @@ function countryCodeToFlagUrl(code: string): string {
           @blur="onBlur"
           :disabled="isLoading"
           placeholder="Enter IP address (e.g. 8.8.8.8)"
-          :class="{ 'has-error': !isValid && modelValue && !isLoading }"
+          :class="{ 'has-error': errorMessage }"
         />
         
         <!-- Loading Spinner -->
         <span v-if="isLoading" class="spinner"></span>
         
         <!-- Result: Flag & Clock -->
-        <div v-if="showResult" class="result">
+        <div v-else-if="showResult" class="result">
           <img
             v-if="data?.countryCode"
             class="flag"
@@ -77,14 +87,11 @@ function countryCodeToFlagUrl(code: string): string {
           />
           <LocalClock :timezone="data?.timezone" />
         </div>
-      </div>
 
-      <!-- Error / Validation Message -->
-      <div v-if="!isValid && modelValue && !isLoading" class="error-msg">
-        Invalid IP address
-      </div>
-      <div v-if="isError && !isLoading && searchedIp === modelValue" class="error-msg api-error">
-        {{ error?.message }}
+        <!-- Error / Validation Message (Inline) -->
+        <div v-else-if="errorMessage" class="error-inline">
+          {{ errorMessage }}
+        </div>
       </div>
     </div>
   </div>
@@ -93,14 +100,14 @@ function countryCodeToFlagUrl(code: string): string {
 <style scoped>
 .ip-row {
   display: flex;
-  align-items: flex-start;
-  padding: 16px 0;
-  border-bottom: 1px solid #f0f0f0;
+  align-items: center; /* Align center vertically now */
+  padding: 12px 0;
+  border-bottom: 1px solid #eee;
   width: 100%;
 }
 
 .row-badge {
-  background: #eee;
+  background: #eef5f0;
   width: 28px;
   height: 28px;
   border-radius: 50%;
@@ -108,17 +115,16 @@ function countryCodeToFlagUrl(code: string): string {
   align-items: center;
   justify-content: center;
   font-size: 0.85rem;
-  font-weight: 500;
-  color: #555;
+  font-weight: 600;
+  color: #42b883;
   margin-right: 16px;
-  margin-top: 4px;
   flex-shrink: 0;
 }
 
 .row-content {
   flex: 1;
   display: flex;
-  flex-direction: column;
+  align-items: center;
 }
 
 .input-wrapper {
@@ -130,22 +136,24 @@ function countryCodeToFlagUrl(code: string): string {
 
 input {
   flex: 0 1 290px; 
-  padding: 8px 12px;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-input);
+  padding: 10px 14px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
   font-size: 1rem;
   outline: none;
   min-width: 0; /* flex fix */
-  transition: border-color 0.2s, box-shadow 0.2s;
+  transition: all 0.2s;
+  background: #fff;
 }
 
 input:focus {
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 2px rgba(79, 195, 247, 0.2);
+  border-color: #42b883;
+  box-shadow: 0 0 0 3px rgba(66, 184, 131, 0.15);
 }
 
 input.has-error {
-  border-color: var(--color-error);
+  border-color: #ff6b6b;
+  box-shadow: 0 0 0 3px rgba(255, 107, 107, 0.1);
 }
 
 input:disabled {
@@ -177,14 +185,12 @@ input:disabled {
 
 
 
-.error-msg {
-  color: var(--color-error);
-  font-size: 0.85rem;
-  margin-top: 6px;
-}
-
-.api-error {
-  color: #d32f2f;
+.error-inline {
+  color: #ff6b6b;
+  font-size: 0.9rem;
+  margin-left: 12px;
+  animation: fadeIn 0.3s ease;
+  white-space: nowrap;
 }
 
 @keyframes fadeIn {

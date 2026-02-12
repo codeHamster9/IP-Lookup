@@ -1,19 +1,22 @@
 :root {
-  --color-primary: #4FC3F7;
-  --color-text: #333;
-  --color-text-secondary: #888;
+  --color-primary: #42b883; /* Vue Green */
+  --color-secondary: #35495e; /* Vue Dark Blue */
+  --color-text: #35495e;
+  --color-text-secondary: #607d8b;
   --color-border: #e0e0e0;
-  --color-bg: #f5f5f5;
+  --color-bg: #eef5f0; /* Light Vue-ish background */
   --color-card: #ffffff;
   --radius-card: 12px;
-  --radius-input: 4px;
-  --font-family: 'Inter', sans-serif;
-  --color-error: #d32f2f;
+  --radius-input: 6px;
+  --font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --color-error: #ff6b6b;
 }
 
 body {
   font-family: var(--font-family);
   background-color: var(--color-bg);
+  /* "Greenier" gradient: Vue Green to a darker green/teal */
+  background: linear-gradient(135deg, #42b883 0%, #347474 100%);
   color: var(--color-text);
   margin: 0;
   display: flex;
@@ -36,28 +39,14 @@ button {
   font-family: inherit;
 }
 
-/* Common utilities */
-.card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 20px;
-  border-bottom: 1px solid var(--color-border);
-}
-
-.card-title {
-  margin: 0;
-  font-size: 1.25rem;
-  font-weight: 600;
-}
-
+/* Spinner utilizing Vue colors */
 .spinner {
-  width: 16px;
-  height: 16px;
-  border: 2px solid #ccc;
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(66, 184, 131, 0.3);
   border-top-color: var(--color-primary);
   border-radius: 50%;
-  animation: spin 1s linear infinite;
+  animation: spin 0.8s ease-in-out infinite;
   display: inline-block;
   vertical-align: middle;
 }
