@@ -149,15 +149,13 @@ function countryCodeToFlagUrl(code: string): string {
   gap: 4px;
 }
 
-/* Wraps input + results */
-
 input {
   /* FIXED WIDTH as requested */
   width: 290px;
   flex: 0 0 290px; 
   padding: 10px 14px; /* Standard padding */
   border: 1px solid #e0e0e0;
-  border-radius: 8px;
+  border-radius: var(--radius-input, 6px);
   font-size: 1rem;
   outline: none;
   transition: all 0.2s;
@@ -168,11 +166,6 @@ input {
   margin-left: 12px;
   color: var(--color-primary);
   animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
 }
 
 @keyframes fadeIn {
@@ -212,8 +205,6 @@ input:disabled {
   cursor: help;
   box-shadow: 0 0 2px rgba(0, 0, 0, 0.15);
 }
-
-
 
 .error-inline {
   color: #ff6b6b;

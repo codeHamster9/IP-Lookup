@@ -28,6 +28,7 @@ const emit = defineEmits<{
     :class="[`variant-${variant}`, { 'has-label': !!label }]"
     @click="emit('click', $event)" 
     :title="title || label" 
+    :aria-label="title || label"
     type="button"
     :style="color ? { '--btn-color': color } : {}"
     :tabindex="tabindex"
@@ -62,7 +63,7 @@ const emit = defineEmits<{
 /* Base styles for labeled button */
 .btn.has-label {
   padding: 8px 16px;
-  border-radius: var(--radius-input, 8px);
+  border-radius: var(--radius-input, 6px);
   font-size: 0.95rem;
 }
 

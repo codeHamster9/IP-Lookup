@@ -36,8 +36,9 @@ async function fillVirtualRow(page: Page, index: number) {
 
 // Helper: add N rows, fill them all
 async function addAndLookup(page: Page, count: number) {
-  // Add rows
-  for (let i = 1; i < count; i++) {
+  // Add rows if needed
+  const currentCount = await page.locator('.ip-row').count();
+  for (let i = currentCount; i < count; i++) {
     await page.getByRole('button', { name: 'Add' }).click();
   }
 
