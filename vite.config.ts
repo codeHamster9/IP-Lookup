@@ -4,7 +4,7 @@ import { resolve } from 'path'
 
 // https://vite.dev/config/
 export default defineConfig({
-  base: process.env.NODE_ENV === 'production' ? '/IP-Lookup/' : '/',
+  base: (process.env.NODE_ENV === 'production' || process.env.GITHUB_ACTIONS === 'true') ? '/IP-Lookup/' : '/',
   plugins: [vue()],
   resolve: {
     alias: {
