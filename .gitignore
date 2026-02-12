@@ -12,6 +12,7 @@ plans
 dist
 dist-ssr
 *.local
+.gemini
 
 # Editor directories and files
 .vscode/*
