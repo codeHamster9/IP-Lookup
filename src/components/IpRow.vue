@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
 import { useIpLookup } from '@/composables/useIpLookup';
-import { useLocalClock } from '@/composables/useLocalClock';
 import { isValidIpv4 } from '@/utils/validateIp';
+import LocalClock from './LocalClock.vue';
 
 const props = defineProps<{
   rowNumber: number;
@@ -17,8 +17,6 @@ const { data, isLoading, isError, error, lookup } = useIpLookup();
 const searchedIp = ref('');
 
 // Derived state
-const timezone = computed(() => data.value?.timezone);
-const { time } = useLocalClock(timezone);
 const isValid = computed(() => isValidIpv4(props.modelValue));
 const showResult = computed(() => 
   !isLoading.value && 
@@ -77,7 +75,7 @@ function countryCodeToFlagUrl(code: string): string {
             width="24"
             height="18"
           />
-          <span class="clock">{{ time }}</span>
+          <LocalClock :timezone="data?.timezone" />
         </div>
       </div>
 
@@ -177,11 +175,7 @@ input:disabled {
   box-shadow: 0 0 2px rgba(0, 0, 0, 0.15);
 }
 
-.clock {
-  font-family: 'Roboto Mono', monospace; /* fallback to monospace if font not loaded */
-  color: #333;
-  width: 7ch; /* approx width for 00:00:00 */
-}
+
 
 .error-msg {
   color: var(--color-error);
