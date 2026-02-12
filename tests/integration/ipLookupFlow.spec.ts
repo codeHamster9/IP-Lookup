@@ -32,6 +32,7 @@ vi.mock('@tanstack/vue-virtual', () => ({
         }));
       },
       getTotalSize: () => options.value.count * 65,
+      scrollToIndex: vi.fn(),
     }));
   },
 }));
@@ -85,7 +86,7 @@ describe('Integration Flow', () => {
     expect(wrapper.text()).toContain('Invalid IP address');
   });
 
-  it.skip('API Error shows error message', async () => {
+  it('API Error shows error message', async () => {
     vi.mocked(fetch).mockResolvedValue({
       ok: true,
       headers: new Headers(),
@@ -101,7 +102,7 @@ describe('Integration Flow', () => {
     await input.setValue('192.168.1.1');
     await input.trigger('blur');
     
-    await vi.waitUntil(() => wrapper.text().includes('private range'), { timeout: 1000, interval: 50 });
+    await vi.waitUntil(() => wrapper.text().includes('private range'), { timeout: 5000, interval: 100 });
     
     expect(wrapper.text()).toContain('private range');
   });

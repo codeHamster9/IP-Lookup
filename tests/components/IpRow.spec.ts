@@ -120,4 +120,25 @@ describe('IpRow.vue', () => {
 
     expect(wrapper.text()).toContain('API Rate Limit');
   });
+
+  it('emits focused event when autoFocus is true', async () => {
+    // We need to mock HTMLInputElement.prototype.focus because JSDOM 
+    // might not execute it or it might not work as expected in all environments.
+    const focusSpy = vi.spyOn(HTMLInputElement.prototype, 'focus');
+    
+    const wrapper = mount(IpRow, {
+      props: { 
+        rowNumber: 1, 
+        modelValue: '',
+        autoFocus: true 
+      },
+      attachTo: document.body // Required for focus() to work in JSDOM
+    });
+
+    expect(focusSpy).toHaveBeenCalled();
+    expect(wrapper.emitted('focused')).toBeTruthy();
+    
+    wrapper.unmount();
+    focusSpy.mockRestore();
+  });
 });

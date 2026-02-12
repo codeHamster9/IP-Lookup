@@ -33,6 +33,7 @@ vi.mock('@tanstack/vue-virtual', () => ({
         }));
       },
       getTotalSize: () => options.value.count * 65,
+      scrollToIndex: vi.fn(),
     }));
   },
 }));
