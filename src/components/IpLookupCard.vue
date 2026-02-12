@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { ref } from 'vue';
+import { Trash2, Plus } from 'lucide-vue-next';
 import IpRow from './IpRow.vue';
-import AddButton from './AddButton.vue';
+import Button from './Button.vue';
 
 interface RowData {
   id: number;
@@ -22,6 +23,10 @@ function removeRow(id: number) {
     rows.value.splice(index, 1);
   }
 }
+
+function removeAll() {
+  rows.value = [];
+}
 </script>
 
 <template>
@@ -39,7 +44,20 @@ function removeRow(id: number) {
       </p>
 
       <div class="controls">
-        <AddButton @click="addRow" />
+        <Button 
+          :icon="Plus" 
+          label="Add" 
+          variant="primary" 
+          @click="addRow" 
+        />
+        <Button 
+          v-if="rows.length > 0" 
+          @click="removeAll" 
+          :icon="Trash2"
+          title="Remove All" 
+          :size="18"
+          color="#ff5252"
+        />
       </div>
 
       <div class="rows-container">
@@ -73,7 +91,7 @@ function removeRow(id: number) {
   justify-content: space-between;
   align-items: center;
   padding: 20px 24px;
-  background-color: #35495e; /* Vue Dark Blue */
+  background-color: var(--color-primary); /* Vue Green instead of Dark Blue */
   color: white;
   border-bottom: 4px solid rgba(0,0,0,0.1); /* Slight depth */
 }
@@ -118,6 +136,9 @@ function removeRow(id: number) {
 
 .controls {
   padding: 0 24px 24px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .rows-container {

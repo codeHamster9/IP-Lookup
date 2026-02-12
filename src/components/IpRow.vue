@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
+import { Loader2, Trash2 } from 'lucide-vue-next';
 import { useIpLookup } from '@/composables/useIpLookup';
 import { isValidIpv4 } from '@/utils/validateIp';
 import LocalClock from './LocalClock.vue';
+import Button from './Button.vue';
 
 const props = defineProps<{
   rowNumber: number;
@@ -72,12 +74,15 @@ function countryCodeToFlagUrl(code: string): string {
           :class="{ 'has-error': errorMessage }"
         />
         
-        <button class="remove-btn" @click="emit('remove')" title="Remove row">
-           ✕
-        </button>
+        <Button 
+          @click="emit('remove')" 
+          :icon="Trash2" 
+          title="Remove row" 
+          :size="16" 
+        />
 
         <!-- Loading Spinner -->
-        <span v-if="isLoading" class="spinner"></span>
+        <Loader2 v-if="isLoading" class="spinner-icon" :size="20" />
         
         <!-- Result: Flag & Clock -->
         <div v-else-if="showResult" class="result">
@@ -137,6 +142,7 @@ function countryCodeToFlagUrl(code: string): string {
   align-items: center;
   position: relative;
   /* Wraps input + results */
+  gap: 4px;
 }
 
 /* Wraps input + results */
@@ -154,28 +160,15 @@ input {
   background: #fff;
 }
 
-.remove-btn {
-  /* Static position next to input */
-  position: static;
-  transform: none;
-  background: transparent;
-  border: none;
-  color: #90a4ae;
-  font-size: 1.1rem;
-  cursor: pointer;
-  padding: 8px; 
-  border-radius: 50%;
-  transition: all 0.2s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-left: 4px; /* Space between input and button */
-  flex-shrink: 0;
+.spinner-icon {
+  margin-left: 12px;
+  color: var(--color-primary);
+  animation: spin 1s linear infinite;
 }
 
-.remove-btn:hover {
-  background-color: #ffebee;
-  color: #ef5350;
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
 @keyframes fadeIn {
@@ -196,10 +189,6 @@ input.has-error {
 input:disabled {
   background-color: #fafafa;
   color: #999;
-}
-
-.spinner {
-  margin-left: 12px;
 }
 
 .result {
@@ -228,10 +217,5 @@ input:disabled {
   margin-left: 12px;
   animation: fadeIn 0.3s ease;
   white-space: nowrap;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(2px); }
-  to { opacity: 1; transform: translateY(0); }
 }
 </style>
