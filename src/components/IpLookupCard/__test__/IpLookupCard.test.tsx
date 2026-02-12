@@ -64,7 +64,7 @@ describe('IpLookupCard', () => {
 
   it('should add a row when pressing Add', () => {
     render(<IpLookupCard />);
-    const addBtn = screen.getByText(/\+ Add/i);
+    const addBtn = screen.getByRole('button', { name: /add/i });
     
     fireEvent.click(addBtn);
 
@@ -74,7 +74,7 @@ describe('IpLookupCard', () => {
 
   it('should remove a row when clicking remove', () => {
     render(<IpLookupCard />);
-    const addBtn = screen.getByText(/\+ Add/i);
+    const addBtn = screen.getByRole('button', { name: /add/i });
     
     // Add two rows (total 3)
     fireEvent.click(addBtn);

@@ -59,10 +59,20 @@
   font-weight: 500;
 }
 
-.time {
-  color: var(--color-text-secondary);
-  font-variant-numeric: tabular-nums;
+.timeContainer {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   margin-left: auto;
+  color: var(--color-text-secondary);
+}
+
+.clockIcon {
+  opacity: 0.7;
+}
+
+.time {
+  font-variant-numeric: tabular-nums;
 }
 
 .error {
@@ -73,12 +83,8 @@
 
 /* Spinner */
 .spinner {
-  width: 20px;
-  height: 20px;
-  border: 2.5px solid var(--color-border);
-  border-top-color: var(--color-primary);
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
+  color: var(--color-primary);
+  animation: spin 1s linear infinite;
   flex-shrink: 0;
 }
 
@@ -92,13 +98,12 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 24px;
-  height: 24px;
+  width: 32px;
+  height: 32px;
   border: none;
   border-radius: 50%;
   background: transparent;
   color: #bbb;
-  font-size: 0.8rem;
   cursor: pointer;
   flex-shrink: 0;
   transition: background 0.15s, color 0.15s;

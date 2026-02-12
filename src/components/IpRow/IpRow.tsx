@@ -1,4 +1,5 @@
 import { useState, useCallback, memo } from 'react';
+import { Trash2, Loader2, Clock } from 'lucide-react';
 import { useIpLookup } from '../../hooks/useIpLookup';
 import { isValidIpv4 } from '../../utils/validateIp';
 import { countryCodeToFlag } from '../../utils/countryFlag';
@@ -79,11 +80,11 @@ export const IpRow = memo(function IpRow({
           onClick={() => onRemove?.(id)}
           aria-label="Remove row"
         >
-          ✕
+          <Trash2 size={18} />
         </button>
       )}
 
-      {isLoading && <div className={styles.spinner} />}
+      {isLoading && <Loader2 className={styles.spinner} size={20} />}
 
       {validationError && (
         <span className={styles.error}>{validationError}</span>
@@ -101,7 +102,10 @@ export const IpRow = memo(function IpRow({
             {countryCodeToFlag(data.countryCode)}
           </span>
           <span className={styles.country}>{data.country}</span>
-          <LocalClock timezone={data.timezone} className={styles.time} />
+          <div className={styles.timeContainer}>
+            <Clock size={14} className={styles.clockIcon} />
+            <LocalClock timezone={data.timezone} className={styles.time} />
+          </div>
         </div>
       )}
     </div>

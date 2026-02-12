@@ -1,4 +1,5 @@
 import { memo } from 'react';
+import { Plus } from 'lucide-react';
 import styles from './AddButton.module.css';
 
 interface AddButtonProps {
@@ -8,7 +9,8 @@ interface AddButtonProps {
 export const AddButton = memo(function AddButton({ onClick }: AddButtonProps) {
   return (
     <button className={styles.button} onClick={onClick} type="button">
-      + Add
+      <Plus size={16} className={styles.icon} />
+      Add
     </button>
   );
 });

@@ -65,7 +65,6 @@ export function IpLookupCard() {
               <ellipse rx="11" ry="4.2" transform="rotate(120)" />
             </g>
           </svg>
-
         </div>
       </div>
 
